@@ -1,0 +1,143 @@
+generator client {
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "rhel-openssl-3.0.x"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String   @id @default(cuid())
+  name         String
+  email        String   @unique
+  passwordHash String?
+  role         String   @default("TECNICO") // ADMIN | ATENDENTE | TECNICO
+  phone        String?
+  createdAt    DateTime @default(now())
+  quotes       Quote[]
+  warranties   Warranty[]
+}
+
+model Customer {
+  id        String   @id @default(cuid())
+  name      String
+  phone     String
+  email     String?
+  cpfCnpj   String?
+  address   String?
+  city      String?
+  consentAt DateTime?
+  createdAt DateTime @default(now())
+  appliances Appliance[]
+  quotes    Quote[]
+  warranties Warranty[]
+}
+
+model Appliance {
+  id           String   @id @default(cuid())
+  customerId   String
+  customer     Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  type         String
+  brand        String
+  model        String?
+  serialNumber String?
+  voltage      String?
+  notes        String?
+  createdAt    DateTime @default(now())
+  quotes       Quote[]
+  warranties   Warranty[]
+}
+
+model Quote {
+  id            String   @id @default(cuid())
+  number        String   @unique
+  customerId    String
+  customer      Customer @relation(fields: [customerId], references: [id])
+  applianceId   String
+  appliance     Appliance @relation(fields: [applianceId], references: [id])
+  technicianId  String?
+  technician    User?    @relation(fields: [technicianId], references: [id])
+  diagnosis     String
+  laborCost     Float    @default(0)
+  partsCost     Float    @default(0)
+  discount      Float    @default(0)
+  total         Float    @default(0)
+  validUntil    DateTime
+  status        String   @default("RASCUNHO") // RASCUNHO ENVIADO APROVADO REPROVADO EXPIRADO CONVERTIDO
+  pdfUrl        String?
+  qrCode        String?
+  publicToken   String?  @unique
+  approvedAt    DateTime?
+  createdAt     DateTime @default(now())
+  items         QuoteItem[]
+  warranty      Warranty?
+}
+
+model QuoteItem {
+  id          String @id @default(cuid())
+  quoteId     String
+  quote       Quote  @relation(fields: [quoteId], references: [id], onDelete: Cascade)
+  description String
+  quantity    Int    @default(1)
+  unitPrice   Float  @default(0)
+  total       Float  @default(0)
+}
+
+model Warranty {
+  id            String   @id @default(cuid())
+  number        String   @unique
+  quoteId       String?  @unique
+  quote         Quote?   @relation(fields: [quoteId], references: [id])
+  customerId    String
+  customer      Customer @relation(fields: [customerId], references: [id])
+  applianceId   String
+  appliance     Appliance @relation(fields: [applianceId], references: [id])
+  technicianId  String?
+  technician    User?    @relation(fields: [technicianId], references: [id])
+  services      String   @default("[]") // JSON array
+  parts         String   @default("[]") // JSON array
+  startDate     DateTime
+  endDate       DateTime
+  durationDays  Int      @default(90)
+  terms         String
+  exclusions    String
+  signatureUrl  String?
+  signedAt      DateTime?
+  pdfUrl        String?
+  qrCode        String?
+  publicToken   String?  @unique
+  status        String   @default("ATIVA") // ATIVA VENCIDA CANCELADA ESTENDIDA
+  createdAt     DateTime @default(now())
+}
+
+model CatalogItem {
+  id          String @id @default(cuid())
+  type        String // PECA | SERVICO
+  name        String
+  description String?
+  price       Float  @default(0)
+  unit        String @default("un")
+  active      Boolean @default(true)
+  createdAt   DateTime @default(now())
+}
+
+model Document {
+  id        String   @id @default(cuid())
+  type      String // ORCAMENTO | GARANTIA
+  number    String
+  url       String?
+  hash      String?
+  createdAt DateTime @default(now())
+}
+
+model Feedback {
+  id        String   @id @default(cuid())
+  type      String // BUG | SUGESTAO | NPS
+  score     Int?
+  message   String
+  page      String?
+  userAgent String?
+  createdAt DateTime @default(now())
+}

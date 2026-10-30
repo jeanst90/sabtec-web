@@ -1,0 +1,14 @@
+{
+  "name": "Sabtec — Orçamentos e Garantias",
+  "short_name": "Sabtec",
+  "description": "Geração de orçamentos e termos de garantia em PDF",
+  "start_url": "/dashboard",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#f95610",
+  "orientation": "portrait",
+  "icons": [
+    { "src": "/brand/logo-sabtec.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "/brand/logo-sabtec.png", "sizes": "512x512", "type": "image/png" }
+  ]
+}

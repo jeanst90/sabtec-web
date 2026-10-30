@@ -1,36 +1,49 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Sabtec — Orçamentos e Termos de Garantia
 
-## Getting Started
+Sistema web (PWA) para geração de orçamentos e termos de garantia em PDF com identidade visual Sabtec.
 
-First, run the development server:
+## Stack
+- Next.js 16 (App Router) + TypeScript
+- Tailwind CSS v4 + shadcn/ui (custom)
+- Prisma + SQLite (dev) / PostgreSQL (prod)
+- @react-pdf/renderer para PDFs
+- Vitest (unit) + Playwright (e2e)
 
+## Setup
 ```bash
+export PATH="$HOME/.local/node/bin:$PATH"
+npm install
+cp .env.example .env   # ajuste DATABASE_URL
+npx prisma db push
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Variáveis de ambiente
+- `DATABASE_URL` — caminho do banco (ex.: `file:/.../prisma/dev.db`)
+- `RESEND_API_KEY` / `RESEND_FROM` — envio de e-mail
+- `NEXT_PUBLIC_APP_URL` — URL pública (portal/QR)
+- `OPENAI_API_KEY` / `OPENAI_MODEL` / `OPENAI_VISION_MODEL` — IA
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Comandos
+- `npm run dev` — desenvolvimento
+- `npm run build` — build de produção
+- `npm run test` — testes unitários
+- `npm run test:e2e` — testes E2E
+- `npm run lint` — lint
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Backup
+```bash
+./scripts/backup.sh
+```
 
-## Learn More
+## LGPD
+- Consentimento registrado em `Customer.consentAt`.
+- Exportação: `GET /api/privacy/export?customerId=...`
+- Anonimização: `POST /api/privacy/delete { customerId }`
 
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Runbook (produção)
+1. Definir `DATABASE_URL` para PostgreSQL.
+2. `npx prisma migrate deploy`
+3. `npm run build && npm start`
+4. Configurar domínio e HTTPS.
+5. Ativar backups diários do banco.
