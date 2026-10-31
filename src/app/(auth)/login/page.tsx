@@ -8,8 +8,8 @@ import { Input, Label, Field } from "@/components/ui/input";
 
 export default function LoginPage() {
   const router = useRouter();
-  const [email, setEmail] = useState("jeanst90@live.com");
-  const [password, setPassword] = useState("Timao1910@");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [show, setShow] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -40,8 +40,8 @@ export default function LoginPage() {
         className="absolute inset-0 bg-cover bg-center"
         style={{ backgroundImage: "url('/auth/login-bg.jpg')" }}
       />
-      <div className="absolute inset-0 bg-gradient-to-br from-black/80 via-black/60 to-black/80" />
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-accent/10 via-transparent to-transparent" />
+      <div className="absolute inset-0 bg-gradient-to-br from-black/85 via-black/70 to-black/90" />
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-accent/15 via-transparent to-transparent" />
 
       {/* Content */}
       <div className="relative z-10 flex min-h-screen flex-col items-center justify-center px-4">
