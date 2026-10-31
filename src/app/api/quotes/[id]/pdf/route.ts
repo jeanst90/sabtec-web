@@ -1,11 +1,15 @@
 import React from "react";
 import { NextResponse } from "next/server";
-import { renderToBuffer } from "@react-pdf/renderer";
+import { pdf } from "@react-pdf/renderer";
 import { supabase } from "@/lib/supabase";
 import { COMPANY } from "@/lib/company";
 import { QuotePdf } from "@/lib/pdf/quote";
 import { loadPdfFonts } from "@/lib/pdf/theme";
 import QRCode from "qrcode";
+
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
 
 type Ctx = { params: Promise<{ id: string }> };
 
@@ -31,10 +35,10 @@ export async function GET(_req: Request, ctx: Ctx) {
     }
 
     const data = {
-      number: quote.number,
-      createdAt: new Date(quote.createdAt).toLocaleDateString("pt-BR"),
-      status: quote.status,
-      validUntil: new Date(quote.validUntil).toLocaleDateString("pt-BR"),
+      number: quote.number || "",
+      createdAt: quote.createdAt ? new Date(quote.createdAt).toLocaleDateString("pt-BR") : new Date().toLocaleDateString("pt-BR"),
+      status: quote.status || "",
+      validUntil: quote.validUntil ? new Date(quote.validUntil).toLocaleDateString("pt-BR") : "",
       customer: {
         name: quote.customer?.name || "",
         phone: quote.customer?.phone || "",
@@ -71,12 +75,18 @@ export async function GET(_req: Request, ctx: Ctx) {
     } catch (e) {
       console.error("PDF font load error:", e);
     }
-    const buffer = await renderToBuffer(React.createElement(QuotePdf, { data }) as any);
+
+    const doc = pdf(React.createElement(QuotePdf, { data }) as any);
+    const buffer = await doc.toBuffer();
     return new NextResponse(new Uint8Array(buffer), {
-      headers: { "Content-Type": "application/pdf", "Content-Disposition": `inline; filename="${quote.number}.pdf"` },
+      headers: {
+        "Content-Type": "application/pdf",
+        "Content-Disposition": `inline; filename="${quote.number || "orcamento"}.pdf"`,
+        "Cache-Control": "no-store",
+      },
     });
   } catch (e: any) {
-    console.error("Quote PDF error:", e);
+    console.error("Quote PDF error:", e?.message || e);
     return NextResponse.json({ error: "Erro ao gerar PDF do orçamento." }, { status: 500 });
   }
 }
