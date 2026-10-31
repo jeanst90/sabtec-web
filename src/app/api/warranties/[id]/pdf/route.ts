@@ -79,10 +79,10 @@ export async function GET(_req: Request, ctx: Ctx) {
     }
 
     const element = React.createElement(WarrantyPdf, { data }) as any;
-    const instance = React.createElement(require("@react-pdf/renderer").Document, null, element);
     // @ts-ignore
-    const { pdf } = require("@react-pdf/renderer");
-    const doc = pdf(instance);
+    const r = await import("@react-pdf/renderer");
+    const instance = React.createElement(r.Document, null, element);
+    const doc = r.pdf(instance);
     const buffer = await doc.toBuffer();
     return new NextResponse(new Uint8Array(buffer), {
       headers: {
