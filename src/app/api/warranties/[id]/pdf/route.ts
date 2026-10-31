@@ -1,6 +1,5 @@
 import React from "react";
 import { NextResponse } from "next/server";
-import { renderToBuffer } from "@react-pdf/renderer";
 import { supabase } from "@/lib/supabase";
 import { COMPANY } from "@/lib/company";
 import { WarrantyPdf } from "@/lib/pdf/warranty";
@@ -79,7 +78,12 @@ export async function GET(_req: Request, ctx: Ctx) {
       console.error("PDF font load error:", e);
     }
 
-    const buffer = await renderToBuffer(React.createElement(WarrantyPdf, { data }) as any);
+    const element = React.createElement(WarrantyPdf, { data }) as any;
+    const instance = React.createElement(require("@react-pdf/renderer").Document, null, element);
+    // @ts-ignore
+    const { pdf } = require("@react-pdf/renderer");
+    const doc = pdf(instance);
+    const buffer = await doc.toBuffer();
     return new NextResponse(new Uint8Array(buffer), {
       headers: {
         "Content-Type": "application/pdf",
