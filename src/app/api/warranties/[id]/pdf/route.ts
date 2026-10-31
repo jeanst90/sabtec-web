@@ -79,14 +79,15 @@ export async function GET(_req: Request, ctx: Ctx) {
     }
 
     const element = React.createElement(WarrantyPdf, { data }) as any;
-    const r: any = await import("@react-pdf/renderer");
-    const instance = React.createElement(r.Document, null, element);
+    const mod: any = await (Function("return import('@react-pdf/renderer')"))();
+    const R = mod.default || mod;
+    const instance = React.createElement(R.Document, null, element);
     let buffer: Buffer;
-    if (typeof r.renderToBuffer === "function") {
-      buffer = await r.renderToBuffer(instance);
-    } else if (typeof r.pdf === "function") {
-      const doc = r.pdf(instance);
-      buffer = await doc.toBuffer();
+    if (typeof R.renderToBuffer === "function") {
+      buffer = await R.renderToBuffer(instance);
+    } else if (typeof R.pdf === "function") {
+      const doc = R.pdf(instance);
+      buffer = doc.toBuffer ? await doc.toBuffer() : await doc;
     } else {
       throw new Error("PDF renderer not available");
     }
