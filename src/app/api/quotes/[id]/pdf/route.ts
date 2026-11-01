@@ -76,7 +76,7 @@ export async function GET(_req: Request, ctx: Ctx) {
     }
 
     const element = React.createElement(QuotePdf, { data }) as any;
-    const mod: any = await (Function("return import('@react-pdf/renderer')"))();
+    const mod: any = await (0, eval)("import('@react-pdf/renderer')");
     const R = mod.default || mod;
     const instance = React.createElement(R.Document, null, element);
     let buffer: Buffer;
