@@ -4,6 +4,8 @@ import { COMPANY } from "@/lib/company";
 import { loadPdfFonts } from "@/lib/pdf/theme";
 import QRCode from "qrcode";
 import React from "react";
+import { pdf } from "@react-pdf/renderer";
+import { WarrantyPdf } from "@/lib/pdf/warranty";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -39,10 +41,6 @@ export async function GET(_req: Request, ctx: Ctx) {
 
     await loadPdfFonts().catch(() => {});
 
-    const r: any = await import("@react-pdf/renderer");
-    const pdf = r.pdf || r.default?.pdf;
-    const { WarrantyPdf }: any = await import("@/lib/pdf/warranty");
-
     const data = {
       number: warranty.number || "",
       createdAt: warranty.createdAt ? new Date(warranty.createdAt).toLocaleDateString("pt-BR") : "",
@@ -74,8 +72,7 @@ export async function GET(_req: Request, ctx: Ctx) {
     };
 
     const instance = React.createElement(WarrantyPdf, { data });
-    const doc = pdf(instance);
-    const buffer = await doc.toBuffer();
+    const buffer = await pdf(instance).toBuffer();
     return new NextResponse(new Uint8Array(buffer), {
       headers: {
         "Content-Type": "application/pdf",

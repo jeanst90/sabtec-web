@@ -4,6 +4,8 @@ import { COMPANY } from "@/lib/company";
 import { loadPdfFonts } from "@/lib/pdf/theme";
 import QRCode from "qrcode";
 import React from "react";
+import { pdf } from "@react-pdf/renderer";
+import { QuotePdf } from "@/lib/pdf/quote";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -29,10 +31,6 @@ export async function GET(_req: Request, ctx: Ctx) {
     }
 
     await loadPdfFonts().catch(() => {});
-
-    const r: any = await import("@react-pdf/renderer");
-    const pdf = r.pdf || r.default?.pdf;
-    const { QuotePdf }: any = await import("@/lib/pdf/quote");
 
     const data = {
       number: quote.number || "",
@@ -71,8 +69,7 @@ export async function GET(_req: Request, ctx: Ctx) {
     };
 
     const instance = React.createElement(QuotePdf, { data });
-    const doc = pdf(instance);
-    const buffer = await doc.toBuffer();
+    const buffer = await pdf(instance).toBuffer();
     return new NextResponse(new Uint8Array(buffer), {
       headers: {
         "Content-Type": "application/pdf",
