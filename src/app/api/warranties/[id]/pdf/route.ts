@@ -1,11 +1,9 @@
-import React from "react";
 import { NextResponse } from "next/server";
-import { createRequire } from "module";
 import { supabase } from "@/lib/supabase";
 import { COMPANY } from "@/lib/company";
-import { WarrantyPdf } from "@/lib/pdf/warranty";
 import { loadPdfFonts } from "@/lib/pdf/theme";
 import QRCode from "qrcode";
+import React from "react";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -79,12 +77,10 @@ export async function GET(_req: Request, ctx: Ctx) {
       console.error("PDF font load error:", e);
     }
 
-    const require = createRequire(process.cwd() + "/package.json");
-    const r: any = require("@react-pdf/renderer");
-    const renderToBuffer = r.renderToBuffer || r.default?.renderToBuffer;
-    const Document = r.Document || r.default?.Document;
-    const instance = React.createElement(Document, null, React.createElement(WarrantyPdf, { data }) as any);
-    const buffer = await renderToBuffer(instance);
+    const { pdf } = await import("@react-pdf/renderer");
+    const { WarrantyPdf } = await import("@/lib/pdf/warranty");
+    const instance = React.createElement(WarrantyPdf, { data });
+    const buffer = await pdf(instance).toBuffer();
     return new NextResponse(new Uint8Array(buffer), {
       headers: {
         "Content-Type": "application/pdf",
