@@ -30,9 +30,9 @@ export async function GET(_req: Request, ctx: Ctx) {
 
     await loadPdfFonts().catch(() => {});
 
-    const renderer: any = await import("@react-pdf/renderer");
-    const pdf = renderer.pdf || renderer.default?.pdf;
-    const { QuotePdf } = await import("@/lib/pdf/quote");
+    const r: any = await import("@react-pdf/renderer");
+    const pdf = r.pdf || r.default?.pdf;
+    const { QuotePdf }: any = await import("@/lib/pdf/quote");
 
     const data = {
       number: quote.number || "",
@@ -70,7 +70,8 @@ export async function GET(_req: Request, ctx: Ctx) {
       company: COMPANY,
     };
 
-    const doc = pdf(React.createElement(QuotePdf, { data }));
+    const instance = React.createElement(QuotePdf, { data });
+    const doc = pdf(instance);
     const buffer = await doc.toBuffer();
     return new NextResponse(new Uint8Array(buffer), {
       headers: {

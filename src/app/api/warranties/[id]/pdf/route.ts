@@ -39,9 +39,9 @@ export async function GET(_req: Request, ctx: Ctx) {
 
     await loadPdfFonts().catch(() => {});
 
-    const renderer: any = await import("@react-pdf/renderer");
-    const pdf = renderer.pdf || renderer.default?.pdf;
-    const { WarrantyPdf } = await import("@/lib/pdf/warranty");
+    const r: any = await import("@react-pdf/renderer");
+    const pdf = r.pdf || r.default?.pdf;
+    const { WarrantyPdf }: any = await import("@/lib/pdf/warranty");
 
     const data = {
       number: warranty.number || "",
@@ -73,7 +73,8 @@ export async function GET(_req: Request, ctx: Ctx) {
       company: COMPANY,
     };
 
-    const doc = pdf(React.createElement(WarrantyPdf, { data }));
+    const instance = React.createElement(WarrantyPdf, { data });
+    const doc = pdf(instance);
     const buffer = await doc.toBuffer();
     return new NextResponse(new Uint8Array(buffer), {
       headers: {
