@@ -3,11 +3,9 @@ import { supabase } from "@/lib/supabase";
 import { COMPANY } from "@/lib/company";
 import { loadPdfFonts } from "@/lib/pdf/theme";
 import QRCode from "qrcode";
-import React from "react";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
-export const revalidate = 0;
 
 type Ctx = { params: Promise<{ id: string }> };
 
@@ -22,19 +20,22 @@ export async function GET(_req: Request, ctx: Ctx) {
     if (error || !quote) return NextResponse.json({ error: "Não encontrado." }, { status: 404 });
 
     const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "https://jeanst90.tech";
-    const portalUrl = quote.publicToken ? `${baseUrl}/p/q/${quote.publicToken}` : baseUrl;
     let qrDataUrl: string | undefined;
     if (quote.publicToken) {
       try {
-        qrDataUrl = await QRCode.toDataURL(portalUrl);
-      } catch {
-        qrDataUrl = undefined;
-      }
+        qrDataUrl = await QRCode.toDataURL(`${baseUrl}/p/q/${quote.publicToken}`);
+      } catch {}
     }
+
+    await loadPdfFonts().catch(() => {});
+
+    const React = await import("react");
+    const { pdf } = await import("@react-pdf/renderer");
+    const { QuotePdf } = await import("@/lib/pdf/quote");
 
     const data = {
       number: quote.number || "",
-      createdAt: quote.createdAt ? new Date(quote.createdAt).toLocaleDateString("pt-BR") : new Date().toLocaleDateString("pt-BR"),
+      createdAt: quote.createdAt ? new Date(quote.createdAt).toLocaleDateString("pt-BR") : "",
       status: quote.status || "",
       validUntil: quote.validUntil ? new Date(quote.validUntil).toLocaleDateString("pt-BR") : "",
       customer: {
@@ -68,25 +69,16 @@ export async function GET(_req: Request, ctx: Ctx) {
       company: COMPANY,
     };
 
-    try {
-      await loadPdfFonts();
-    } catch (e) {
-      console.error("PDF font load error:", e);
-    }
-
-    const { pdf } = await import("@react-pdf/renderer");
-    const { QuotePdf } = await import("@/lib/pdf/quote");
-    const instance = React.createElement(QuotePdf, { data });
-    const buffer = await pdf(instance).toBuffer();
+    const doc = pdf(React.createElement(QuotePdf, { data }));
+    const buffer = await doc.toBuffer();
     return new NextResponse(new Uint8Array(buffer), {
       headers: {
         "Content-Type": "application/pdf",
         "Content-Disposition": `inline; filename="${quote.number || "orcamento"}.pdf"`,
-        "Cache-Control": "no-store",
       },
     });
   } catch (e: any) {
-    console.error("Quote PDF error:", e?.message || e);
+    console.error("Quote PDF error:", e?.message);
     return NextResponse.json({ error: "Erro ao gerar PDF do orçamento." }, { status: 500 });
   }
 }

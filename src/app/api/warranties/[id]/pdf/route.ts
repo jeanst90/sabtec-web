@@ -3,11 +3,9 @@ import { supabase } from "@/lib/supabase";
 import { COMPANY } from "@/lib/company";
 import { loadPdfFonts } from "@/lib/pdf/theme";
 import QRCode from "qrcode";
-import React from "react";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
-export const revalidate = 0;
 
 type Ctx = { params: Promise<{ id: string }> };
 
@@ -31,15 +29,18 @@ export async function GET(_req: Request, ctx: Ctx) {
     } catch {}
 
     const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "https://jeanst90.tech";
-    const portalUrl = warranty.publicToken ? `${baseUrl}/p/w/${warranty.publicToken}` : baseUrl;
     let qrDataUrl: string | undefined;
     if (warranty.publicToken) {
       try {
-        qrDataUrl = await QRCode.toDataURL(portalUrl);
-      } catch {
-        qrDataUrl = undefined;
-      }
+        qrDataUrl = await QRCode.toDataURL(`${baseUrl}/p/w/${warranty.publicToken}`);
+      } catch {}
     }
+
+    await loadPdfFonts().catch(() => {});
+
+    const React = await import("react");
+    const { pdf } = await import("@react-pdf/renderer");
+    const { WarrantyPdf } = await import("@/lib/pdf/warranty");
 
     const data = {
       number: warranty.number || "",
@@ -71,25 +72,16 @@ export async function GET(_req: Request, ctx: Ctx) {
       company: COMPANY,
     };
 
-    try {
-      await loadPdfFonts();
-    } catch (e) {
-      console.error("PDF font load error:", e);
-    }
-
-    const { pdf } = await import("@react-pdf/renderer");
-    const { WarrantyPdf } = await import("@/lib/pdf/warranty");
-    const instance = React.createElement(WarrantyPdf, { data });
-    const buffer = await pdf(instance).toBuffer();
+    const doc = pdf(React.createElement(WarrantyPdf, { data }));
+    const buffer = await doc.toBuffer();
     return new NextResponse(new Uint8Array(buffer), {
       headers: {
         "Content-Type": "application/pdf",
         "Content-Disposition": `inline; filename="${warranty.number || "garantia"}.pdf"`,
-        "Cache-Control": "no-store",
       },
     });
   } catch (e: any) {
-    console.error("Warranty PDF error:", e?.message || e);
+    console.error("Warranty PDF error:", e?.message);
     return NextResponse.json({ error: "Erro ao gerar PDF da garantia." }, { status: 500 });
   }
 }
