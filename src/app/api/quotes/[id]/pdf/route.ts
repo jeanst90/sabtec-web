@@ -77,7 +77,8 @@ export async function GET(_req: Request, ctx: Ctx) {
       },
     });
   } catch (e: any) {
-    console.error("Quote PDF error:", e?.message);
-    return NextResponse.json({ error: "Erro ao gerar PDF do orçamento." }, { status: 500 });
+    console.error("Quote PDF error:", e);
+    console.error(e?.stack);
+    return NextResponse.json({ error: "Erro ao gerar PDF do orçamento.", detail: e?.message }, { status: 500 });
   }
 }
