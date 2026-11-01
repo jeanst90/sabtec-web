@@ -4,8 +4,6 @@ import { COMPANY } from "@/lib/company";
 import { loadPdfFonts } from "@/lib/pdf/theme";
 import QRCode from "qrcode";
 import React from "react";
-import { pdf } from "@react-pdf/renderer";
-import { QuotePdf } from "@/lib/pdf/quote";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -30,7 +28,11 @@ export async function GET(_req: Request, ctx: Ctx) {
       } catch {}
     }
 
-    await loadPdfFonts().catch(() => {});
+    try {
+      await loadPdfFonts();
+    } catch (fontErr: any) {
+      console.error("Font load error:", fontErr?.message);
+    }
 
     const data = {
       number: quote.number || "",
@@ -68,8 +70,35 @@ export async function GET(_req: Request, ctx: Ctx) {
       company: COMPANY,
     };
 
+    const ReactPDF: any = await import("@react-pdf/renderer");
+    const { QuotePdf }: any = await import("@/lib/pdf/quote");
+    
+    const pdfFn = ReactPDF.pdf || ReactPDF.default?.pdf;
+    if (!pdfFn) {
+      throw new Error("pdf function not found");
+    }
+    
     const instance = React.createElement(QuotePdf, { data });
-    const buffer = await pdf(instance).toBuffer();
+    const doc = pdfFn(instance);
+    
+    let buffer: Buffer;
+    if (typeof doc.toBuffer === "function") {
+      const result = await doc.toBuffer();
+      buffer = Buffer.isBuffer(result) ? result : Buffer.from(result);
+    } else if (typeof ReactPDF.renderToBuffer === "function") {
+      const result = await ReactPDF.renderToBuffer(instance);
+      buffer = Buffer.isBuffer(result) ? result : Buffer.from(result);
+    } else if (typeof ReactPDF.renderToStream === "function") {
+      const stream = await ReactPDF.renderToStream(instance);
+      const chunks: any[] = [];
+      for await (const chunk of stream) {
+        chunks.push(chunk);
+      }
+      buffer = Buffer.concat(chunks);
+    } else {
+      throw new Error("No PDF generation method found");
+    }
+    
     return new NextResponse(new Uint8Array(buffer), {
       headers: {
         "Content-Type": "application/pdf",
@@ -77,8 +106,7 @@ export async function GET(_req: Request, ctx: Ctx) {
       },
     });
   } catch (e: any) {
-    console.error("Quote PDF error:", e);
-    console.error(e?.stack);
+    console.error("Quote PDF error:", e?.message || e);
     return NextResponse.json({ error: "Erro ao gerar PDF do orçamento.", detail: e?.message }, { status: 500 });
   }
 }
