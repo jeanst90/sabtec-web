@@ -6,6 +6,7 @@ const nextConfig = {
   poweredByHeader: false,
   compress: true,
   reactStrictMode: true,
+  serverExternalPackages: ['@react-pdf/renderer', '@react-pdf/layout', '@react-pdf/textkit', '@react-pdf/font', '@react-pdf/pdfkit', 'pdfkit'],
 };
 
 export default nextConfig;
