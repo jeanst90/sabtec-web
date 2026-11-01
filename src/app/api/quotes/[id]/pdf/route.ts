@@ -76,15 +76,15 @@ export async function GET(_req: Request, ctx: Ctx) {
     }
 
     const element = React.createElement(QuotePdf, { data }) as any;
-    const mod: any = await (0, eval)("import('@react-pdf/renderer')");
-    const R = mod.default || mod;
+    const renderer = await import("@react-pdf/renderer");
+    const R: any = (renderer as any).default || renderer;
     const instance = React.createElement(R.Document, null, element);
     let buffer: Buffer;
     if (typeof R.renderToBuffer === "function") {
       buffer = await R.renderToBuffer(instance);
     } else if (typeof R.pdf === "function") {
       const doc = R.pdf(instance);
-      buffer = doc.toBuffer ? await doc.toBuffer() : await doc;
+      buffer = typeof doc.toBuffer === "function" ? await doc.toBuffer() : await doc;
     } else {
       throw new Error("PDF renderer not available");
     }
