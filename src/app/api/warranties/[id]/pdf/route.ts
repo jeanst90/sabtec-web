@@ -3,6 +3,7 @@ import { supabase } from "@/lib/supabase";
 import { COMPANY } from "@/lib/company";
 import { loadPdfFonts } from "@/lib/pdf/theme";
 import QRCode from "qrcode";
+import React from "react";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -38,8 +39,8 @@ export async function GET(_req: Request, ctx: Ctx) {
 
     await loadPdfFonts().catch(() => {});
 
-    const React = await import("react");
-    const { pdf } = await import("@react-pdf/renderer");
+    const renderer: any = await import("@react-pdf/renderer");
+    const pdf = renderer.pdf || renderer.default?.pdf;
     const { WarrantyPdf } = await import("@/lib/pdf/warranty");
 
     const data = {
