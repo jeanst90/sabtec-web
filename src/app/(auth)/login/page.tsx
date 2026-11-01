@@ -14,6 +14,12 @@ export default function LoginPage() {
   useEffect(() => {
     setEmail("");
     setPassword("");
+    // Clear any autofill
+    const timer = setTimeout(() => {
+      setEmail("");
+      setPassword("");
+    }, 100);
+    return () => clearTimeout(timer);
   }, []);
   const [show, setShow] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -45,8 +51,8 @@ export default function LoginPage() {
         className="absolute inset-0 bg-cover bg-center"
         style={{ backgroundImage: "url('/auth/login-bg.jpg')" }}
       />
-      <div className="absolute inset-0 bg-gradient-to-br from-black/85 via-black/70 to-black/90" />
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-accent/15 via-transparent to-transparent" />
+      <div className="absolute inset-0 bg-gradient-to-br from-black/90 via-black/75 to-black/95" />
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-accent/20 via-transparent to-transparent" />
 
       {/* Content */}
       <div className="relative z-10 flex min-h-screen flex-col items-center justify-center px-4">
@@ -90,7 +96,8 @@ export default function LoginPage() {
                       className="pl-9"
                       placeholder="seu@email.com"
                       required
-                      autoComplete="email"
+                      autoComplete="off"
+                      name="email"
                     />
                   </div>
                 </Field>
@@ -106,7 +113,8 @@ export default function LoginPage() {
                       className="pl-9 pr-10"
                       placeholder="••••••••"
                       required
-                      autoComplete="current-password"
+                      autoComplete="off"
+                      name="password"
                     />
                     <button
                       type="button"
