@@ -4,14 +4,37 @@ import { COMPANY } from "@/lib/company";
 import { loadPdfFonts } from "@/lib/pdf/theme";
 import QRCode from "qrcode";
 import React from "react";
+import fs from "fs";
+import path from "path";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
+
+function ensurePdfkitFonts() {
+  try {
+    const srcDir = path.join(process.cwd(), "scripts", "pdfkit-standard-fonts");
+    const dstDir = path.join(process.cwd(), "node_modules", "pdfkit", "js", "standard-fonts");
+    if (!fs.existsSync(srcDir) || !fs.existsSync(dstDir)) return;
+    const copyDir = (s, d) => {
+      if (!fs.existsSync(d)) fs.mkdirSync(d, { recursive: true });
+      for (const f of fs.readdirSync(s)) {
+        const sp = path.join(s, f);
+        const dp = path.join(d, f);
+        if (fs.statSync(sp).isDirectory()) copyDir(sp, dp);
+        else if (!fs.existsSync(dp)) fs.copyFileSync(sp, dp);
+      }
+    };
+    copyDir(srcDir, dstDir);
+  } catch (e) {
+    console.error("ensurePdfkitFonts error:", (e as any)?.message);
+  }
+}
 
 type Ctx = { params: Promise<{ id: string }> };
 
 export async function GET(_req: Request, ctx: Ctx) {
   try {
+    ensurePdfkitFonts();
     const { id } = await ctx.params;
     const { data: warranty, error } = await supabase
       .from("Warranty")
