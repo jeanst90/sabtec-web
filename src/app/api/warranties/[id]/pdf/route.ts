@@ -84,23 +84,12 @@ export async function GET(_req: Request, ctx: Ctx) {
     const instance = React.createElement(WarrantyPdf, { data });
     const doc = pdfFn(instance);
     
-    let buffer: Buffer;
-    if (typeof doc.toBuffer === "function") {
-      const result = await doc.toBuffer();
-      buffer = Buffer.isBuffer(result) ? result : Buffer.from(result);
-    } else if (typeof ReactPDF.renderToBuffer === "function") {
-      const result = await ReactPDF.renderToBuffer(instance);
-      buffer = Buffer.isBuffer(result) ? result : Buffer.from(result);
-    } else if (typeof ReactPDF.renderToStream === "function") {
-      const stream = await ReactPDF.renderToStream(instance);
-      const chunks: any[] = [];
-      for await (const chunk of stream) {
-        chunks.push(chunk);
-      }
-      buffer = Buffer.concat(chunks);
-    } else {
-      throw new Error("No PDF generation method found");
+    const stream = await doc.toBuffer();
+    const chunks: any[] = [];
+    for await (const chunk of stream) {
+      chunks.push(chunk);
     }
+    const buffer = Buffer.concat(chunks);
     
     return new NextResponse(new Uint8Array(buffer), {
       headers: {

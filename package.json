@@ -5,6 +5,7 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build --webpack",
+    "postinstall": "node scripts/patch-hyphenate.js",
     "start": "NODE_ENV=production node server.js",
     "start:next": "next start",
     "lint": "eslint",

@@ -7,16 +7,11 @@ const nextConfig = {
   compress: true,
   reactStrictMode: true,
   serverExternalPackages: ['@react-pdf/renderer', '@react-pdf/layout', '@react-pdf/textkit', '@react-pdf/font', '@react-pdf/pdfkit', 'pdfkit', 'fontkit'],
-  webpack: (config, { isServer }) => {
-    if (isServer) {
-      config.resolve = config.resolve || {};
-      config.resolve.fallback = {
-        ...(config.resolve.fallback || {}),
-        fs: false,
-      };
-    }
-    return config;
+  outputFileTracingIncludes: {
+    '/api/quotes/[id]/pdf': ['./node_modules/pdfkit/js/standard-fonts/**/*'],
+    '/api/warranties/[id]/pdf': ['./node_modules/pdfkit/js/standard-fonts/**/*'],
   },
+  turbopack: {},
 };
 
 export default nextConfig;
